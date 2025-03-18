@@ -1,0 +1,22 @@
+server:
+  port: 8911
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: service1_route
+          uri: http://localhost:8084
+          predicates:
+            - Path=/v1/api/zoo/**
+#          filters:
+#            - StripPrefix=1
+
+        - id: service2_route
+          uri: http://localhost:8082
+          predicates:
+            - Path=/service2/**
+
+logging:
+  level:
+    io.netty: DEBUG
