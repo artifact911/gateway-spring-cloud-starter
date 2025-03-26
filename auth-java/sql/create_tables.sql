@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS roles (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(32) UNIQUE NOT NULL,
+    description TEXT NOT NULL
+    );
+
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(64) UNIQUE NOT NULL,
+    login VARCHAR(64) UNIQUE NOT NULL,
+    password TEXT NOT NULL
+    );
+
+CREATE TABLE IF NOT EXISTS users_roles (
+    user_id BIGSERIAL REFERENCES users(id) ON DELETE CASCADE,
+    role_id BIGSERIAL REFERENCES roles(id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, role_id)
+    );

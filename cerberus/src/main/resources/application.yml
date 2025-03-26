@@ -5,10 +5,10 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: service1_route
-          uri: http://localhost:8084
+        - id: hello_api
+          uri: http://localhost:8081
           predicates:
-            - Path=/v1/api/zoo/**
+            - Path=/v1/api/hello/**
 #          filters:
 #            - StripPrefix=1
 

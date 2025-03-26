@@ -1,0 +1,8 @@
+server:
+  port: 8079
+  servlet:
+    context-path: "/v1/api"
+
+#logging:
+#  level:
+#    io.netty: DEBUG
