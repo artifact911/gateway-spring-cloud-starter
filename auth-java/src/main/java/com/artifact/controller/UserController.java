@@ -4,7 +4,7 @@ import com.artifact.constants.Status;
 import com.artifact.dto.UserResponse;
 import com.artifact.dto.signup.SignUpRequest;
 import com.artifact.dto.signup.SignUpResponse;
-import com.artifact.exception.UserException;
+import com.artifact.exception.UserDBException;
 import com.artifact.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,7 +39,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new SignUpResponse(Status.SUCCESS));
-        } catch (UserException e) {
+        } catch (UserDBException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new SignUpResponse(Status.FAILURE, e.getMessage()));

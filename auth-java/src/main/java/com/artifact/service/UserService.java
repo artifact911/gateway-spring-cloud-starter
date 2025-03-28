@@ -5,7 +5,7 @@ import com.artifact.dto.UserResponse;
 import com.artifact.dto.signup.SignUpRequest;
 import com.artifact.entity.Role;
 import com.artifact.entity.User;
-import com.artifact.exception.UserException;
+import com.artifact.exception.UserDBException;
 import com.artifact.mapper.UserMapper;
 import com.artifact.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,9 @@ public class UserService {
     private final RoleService roleService;
 
     public UserResponse findById(Long id) {
-       return UserMapper.toUserResponse(userRepository.findById(id).orElse(new User()));
+        return UserMapper.toUserResponse(
+                userRepository.findById(id)
+                        .orElseThrow(() -> new UserDBException("User not found")));
     }
 
     public List<User> findByLogin(String login) {
@@ -42,7 +44,7 @@ public class UserService {
                     .build());
             return UserMapper.toUserResponse(saved);
         } else {
-            throw new UserException(String.format("Пользователь %s уже зарегистрирован", signUpRequest.getLogin()));
+            throw new UserDBException(String.format("Пользователь %s уже зарегистрирован", signUpRequest.getLogin()));
         }
     }
 }
