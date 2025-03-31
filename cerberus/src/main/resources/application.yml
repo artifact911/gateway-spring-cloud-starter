@@ -5,17 +5,17 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: hello_api
+        - id: public-auth_java_api
+          uri: http://localhost:8079
+          predicates:
+            - Path=/v1/api/auth/login
+
+        - id: private_hello_api
           uri: http://localhost:8081
           predicates:
             - Path=/v1/api/hello/**
-#          filters:
-#            - StripPrefix=1
-
-        - id: service2_route
-          uri: http://localhost:8082
-          predicates:
-            - Path=/service2/**
+      default-filters:
+        - AuthFilter
 
 logging:
   level:
