@@ -3,6 +3,7 @@ package com.artifact.filters;
 import com.artifact.configuration.SecurityConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -21,7 +21,6 @@ import java.util.Set;
 @Component
 public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> {
 
-    private static final String SECRET_KEY = "art911_my_really_super_secret_key_as_it_possible";
     private static final String SECRET_KEY_BASE_64 = "YXJ0OTExX215X3JlYWxseV9zdXBlcl9zZWNyZXRfa2V5X2FzX2l0X3Bvc3NpYmxl";
 
     private final SecretKey secretKey;
@@ -32,7 +31,7 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
         super(Config.class);
         // Инициализация ключа один раз
         this.securityConfig = securityConfig;
-        byte[] keyBytes = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY_BASE_64);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -105,32 +104,33 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
                 .build();
     }
 
-    public static class Config {
-//        Архитектура Spring Cloud Gateway
-//        Классы фильтров, наследующие AbstractGatewayFilterFactory, обязаны иметь:
-//        Вложенный класс конфигурации (в вашем случае Config)
-//        Указание этого класса в generic-типе: AbstractGatewayFilterFactory<AuthFilter.Config>
-
-//        Для чего используется Config
-//        Класс предназначен для кастомизации фильтра через YAML. Даже если сейчас он пустой, его наличие обязательно.
-//
-//        Пример использования конфигурации:
-
-//        public static class Config {
-//            private boolean logHeaders;
-//            private String customParam;
-//            // Геттеры и сеттеры
-//        }
-
-//        Тогда в application.yml можно будет настроить:
-
-//        spring:
-//          cloud:
-//            gateway:
-//               default-filters:
-//                - name: AuthFilter
-//                  args:
-//                    logHeaders: true
-//                    customParam: "value"
-    }
+    /**
+     *         Архитектура Spring Cloud Gateway
+     *         Классы фильтров, наследующие AbstractGatewayFilterFactory, обязаны иметь:
+     *         Вложенный класс конфигурации (в вашем случае Config)
+     *         Указание этого класса в generic-типе: AbstractGatewayFilterFactory<AuthFilter.Config>
+     *
+     *         Для чего используется Config
+     *         Класс предназначен для кастомизации фильтра через YAML. Даже если сейчас он пустой, его наличие обязательно.
+     *
+     *         Пример использования конфигурации:
+     *
+     *         public static class Config {
+     *             private boolean logHeaders;
+     *             private String customParam;
+     *             // Геттеры и сеттеры
+     *         }
+     *
+     *         Тогда в application.yml можно будет настроить:
+     *
+     *         spring:
+     *           cloud:
+     *             gateway:
+     *                default-filters:
+     *                 - name: AuthFilter
+     *                   args:
+     *                     logHeaders: true
+     *                     customParam: "value"
+     */
+    public static class Config { }
 }

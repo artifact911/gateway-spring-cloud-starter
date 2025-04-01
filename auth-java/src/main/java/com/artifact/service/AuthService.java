@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +24,6 @@ import java.util.stream.Collectors;
 public class AuthService {
 
     // TODO Убрать хранение ключа тут
-    private static final String SECRET_KEY = "art911_my_really_super_secret_key_as_it_possible";
     private static final String SECRET_KEY_BASE_64 = "YXJ0OTExX215X3JlYWxseV9zdXBlcl9zZWNyZXRfa2V5X2FzX2l0X3Bvc3NpYmxl";
 //    private static final long FIVE_MINUTES_EXPIRATION_TIME = 300000; // 5 мин
     private static final long FIVE_MINUTES_EXPIRATION_TIME = 86400000; // 24 часа
@@ -62,8 +60,8 @@ public class AuthService {
                 .add("role", roles)
                 .build();
 
-//        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY_BASE_64));
-        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY_BASE_64));
+//        SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + FIVE_MINUTES_EXPIRATION_TIME);
