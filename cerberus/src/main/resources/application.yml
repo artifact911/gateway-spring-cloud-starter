@@ -17,6 +17,18 @@ spring:
       default-filters:
         - AuthFilter
 
+security:
+  public-paths:
+    - /v1/api/auth/login
+#    - /v1/api/public/**  # Все подпути
+#    - /v2/api/docs/*.html  # Конкретные файлы
+
+  role-paths:
+    - path: /v1/api/hello
+      roles: [USER, ADMIN]
+#    - path: /v1/api/profile  # Доступно всем аутентифицированным
+#      roles: [ ]
+
 logging:
   level:
     io.netty: DEBUG
