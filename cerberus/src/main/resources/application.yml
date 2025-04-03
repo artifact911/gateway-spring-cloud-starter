@@ -17,6 +17,7 @@ spring:
       default-filters:
         - AuthFilter
 
+#  Более специфичные пути должны быть указаны раньше в списке.
 security:
   public-paths:
     - /v1/api/auth/login

@@ -89,7 +89,7 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
     }
 
     private Set<String> extractRoles(Claims claims) {
-        List<String> rolesList = claims.get("role", List.class);
+        List<String> rolesList = claims.get("roles", List.class);
         return (rolesList != null) ? new HashSet<>(rolesList) : Collections.emptySet();
     }
 

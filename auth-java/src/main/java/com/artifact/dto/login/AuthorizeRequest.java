@@ -1,4 +1,4 @@
-package com.artifact.dto.auth;
+package com.artifact.dto.login;
 
 import lombok.Data;
 

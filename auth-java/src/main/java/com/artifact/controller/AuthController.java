@@ -1,8 +1,11 @@
 package com.artifact.controller;
 
-import com.artifact.dto.auth.AuthorizeRequest;
-import com.artifact.dto.auth.AuthorizeResponse;
-import com.artifact.dto.auth.Tokens;
+import com.artifact.dto.error.ErrorBodyResponse;
+import com.artifact.dto.login.AuthorizeRequest;
+import com.artifact.dto.login.AuthorizeResponse;
+import com.artifact.dto.login.Tokens;
+import com.artifact.dto.refresh.RefreshTokenRequest;
+import com.artifact.dto.refresh.RefreshTokenResponse;
 import com.artifact.exception.AuthApiJavaException;
 import com.artifact.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -22,16 +25,31 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> signUp(@RequestBody AuthorizeRequest authorizeRequest) {
+    public ResponseEntity<?> login(@RequestBody AuthorizeRequest authorizeRequest) {
         try {
             Tokens tokens = authService.authenticate(authorizeRequest);
             return ResponseEntity.status(HttpStatus.OK)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(AuthorizeResponse.builder().accessToken(tokens.getAccessToken()).build());
+                    .body(new AuthorizeResponse(tokens.getAccessToken(), tokens.getRefreshToken()));
         } catch (AuthApiJavaException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(AuthorizeResponse.builder().message(e.getMessage()).build());
+                    .body(ErrorBodyResponse.builder().message(e.getMessage()).build());
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(@RequestBody RefreshTokenRequest request) {
+        try {
+            Tokens refreshed = authService.refresh(request.getRefreshToken());
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new RefreshTokenResponse(refreshed.getAccessToken(), refreshed.getRefreshToken()));
+        } catch (AuthApiJavaException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(ErrorBodyResponse.builder().message(e.getMessage()).build());
         }
     }
 }
