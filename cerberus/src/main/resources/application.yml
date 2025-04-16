@@ -2,6 +2,16 @@ server:
   port: 8911
 
 spring:
+  application:
+    name: gateway-service
+  sleuth:
+    trace-id128: true # 128-битный traceId
+    supports-join: true
+#  sleuth:
+#    sampler:
+#      probability: 1.0
+#    zipkin:
+#      base-url: http://localhost:9411
   cloud:
     gateway:
       routes:
@@ -16,6 +26,18 @@ spring:
             - Path=/v1/api/hello/**
       default-filters:
         - AuthFilter
+
+#management:
+#  tracing:
+#    enabled: true
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0 # Обязательно для генерации traceId
+    propagation:
+      type: W3C # Используем современный формат
 
 #  Более специфичные пути должны быть указаны раньше в списке.
 security:
