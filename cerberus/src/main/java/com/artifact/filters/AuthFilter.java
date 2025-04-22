@@ -5,14 +5,17 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 
 import javax.crypto.SecretKey;
+import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -26,13 +29,17 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
     private final SecretKey secretKey;
     private final SecurityConfig securityConfig;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public AuthFilter(SecurityConfig securityConfig) {
+    @Autowired
+    public AuthFilter(SecurityConfig securityConfig, KafkaTemplate<String, String> kafkaTemplate) {
         super(Config.class);
         // Инициализация ключа один раз
         this.securityConfig = securityConfig;
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY_BASE_64);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @Override
@@ -42,24 +49,51 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
 
             // Пропускаем публичные пути
             if (isPublicPath(path)) {
+                final String publicPathKafkaMsgTemplate = "from: %s to: %s";
+                String remoteAddress = getRemoteAddress(exchange.getRequest());
+                kafkaTemplate.send("PublicPathTopic",
+                        String.format(publicPathKafkaMsgTemplate, remoteAddress, path));
+
                 return chain.filter(exchange);
             }
 
             // Проверка токена для остальных путей
             if (!exchange.getRequest().getHeaders().containsKey("Authorization")) {
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+
+                final String noTokenPrivatePathKafkaMsgTemplate = "no token request from: %s to: %s";
+                String remoteAddress = getRemoteAddress(exchange.getRequest());
+                kafkaTemplate.send("PrivatePathTopic",
+                        String.format(noTokenPrivatePathKafkaMsgTemplate, remoteAddress, path));
+
                 return exchange.getResponse().setComplete();
             }
 
-            String token = exchange.getRequest().getHeaders().getFirst("Authorization").replace("Bearer ", "");
+            String token = exchange.getRequest()
+                    .getHeaders()
+                    .getFirst("Authorization")
+                    .replace("Bearer ", "");
+
             Claims claims = parseToken(token);
             Set<String> userRoles = extractRoles(claims);
+            String subject = claims.getSubject();
 
             // Проверка ролей
             if (!hasAccess(path, userRoles)) {
                 exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+
+                final String forbiddenPrivatePathKafkaMsgTemplate = "forbidden for %s request from: %s to: %s";
+                String remoteAddress = getRemoteAddress(exchange.getRequest());
+                kafkaTemplate.send("PrivatePathTopic",
+                        String.format(forbiddenPrivatePathKafkaMsgTemplate, subject, remoteAddress, path));
+
                 return exchange.getResponse().setComplete();
             }
+
+            final String successPrivatePathKafkaMsgTemplate = "success for %s request from: %s to: %s";
+            String remoteAddress = getRemoteAddress(exchange.getRequest());
+            kafkaTemplate.send("PrivatePathTopic",
+                    String.format(successPrivatePathKafkaMsgTemplate, subject, remoteAddress, path));
 
             // Продолжаем цепочку фильтров
             return chain.filter(exchange.mutate()
@@ -104,33 +138,39 @@ public class AuthFilter extends AbstractGatewayFilterFactory<AuthFilter.Config> 
                 .build();
     }
 
+    private String getRemoteAddress(ServerHttpRequest request) {
+        InetSocketAddress remoteAddress = request.getRemoteAddress();
+        return remoteAddress != null ? remoteAddress.getHostString() : "unknown";
+    }
+
     /**
-     *         Архитектура Spring Cloud Gateway
-     *         Классы фильтров, наследующие AbstractGatewayFilterFactory, обязаны иметь:
-     *         Вложенный класс конфигурации (в вашем случае Config)
-     *         Указание этого класса в generic-типе: AbstractGatewayFilterFactory<AuthFilter.Config>
-     *
-     *         Для чего используется Config
-     *         Класс предназначен для кастомизации фильтра через YAML. Даже если сейчас он пустой, его наличие обязательно.
-     *
-     *         Пример использования конфигурации:
-     *
-     *         public static class Config {
-     *             private boolean logHeaders;
-     *             private String customParam;
-     *             // Геттеры и сеттеры
-     *         }
-     *
-     *         Тогда в application.yml можно будет настроить:
-     *
-     *         spring:
-     *           cloud:
-     *             gateway:
-     *                default-filters:
-     *                 - name: AuthFilter
-     *                   args:
-     *                     logHeaders: true
-     *                     customParam: "value"
+     * Архитектура Spring Cloud Gateway
+     * Классы фильтров, наследующие AbstractGatewayFilterFactory, обязаны иметь:
+     * Вложенный класс конфигурации (в вашем случае Config)
+     * Указание этого класса в generic-типе: AbstractGatewayFilterFactory<AuthFilter.Config>
+     * <p>
+     * Для чего используется Config
+     * Класс предназначен для кастомизации фильтра через YAML. Даже если сейчас он пустой, его наличие обязательно.
+     * <p>
+     * Пример использования конфигурации:
+     * <p>
+     * public static class Config {
+     * private boolean logHeaders;
+     * private String customParam;
+     * // Геттеры и сеттеры
+     * }
+     * <p>
+     * Тогда в application.yml можно будет настроить:
+     * <p>
+     * spring:
+     * cloud:
+     * gateway:
+     * default-filters:
+     * - name: AuthFilter
+     * args:
+     * logHeaders: true
+     * customParam: "value"
      */
-    public static class Config { }
+    public static class Config {
+    }
 }

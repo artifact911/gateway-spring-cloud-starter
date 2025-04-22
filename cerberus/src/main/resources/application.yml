@@ -4,14 +4,23 @@ server:
 spring:
   application:
     name: gateway-service
+  kafka:
+    admin:
+      auto-create: true  # Разрешает Spring Kafka создавать топики
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      properties:
+        auto.create.topics.enable: true  # Для продюсера
+        delivery.timeout.ms: 120000
+
   sleuth:
     trace-id128: true # 128-битный traceId
     supports-join: true
-#  sleuth:
-#    sampler:
-#      probability: 1.0
-#    zipkin:
-#      base-url: http://localhost:9411
+
   cloud:
     gateway:
       routes:
@@ -26,10 +35,7 @@ spring:
             - Path=/v1/api/hello/**
       default-filters:
         - AuthFilter
-
-#management:
-#  tracing:
-#    enabled: true
+#        - KafkaGatewayFilter
 
 management:
   tracing:
