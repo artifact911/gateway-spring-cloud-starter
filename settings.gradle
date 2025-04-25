@@ -5,4 +5,5 @@ rootProject.name = 'gateway-spring-cloud-starter'
 include 'cerberus'
 include 'hello-api'
 include 'auth-java'
+include 'users-api'
 
