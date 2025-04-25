@@ -8,9 +8,17 @@ open class User(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    open var id: Long? = null,
+    open val id: Long? = null,
 
-    open var login: String,
+    open val login: String,
 
-    open var password: String
+    open val password: String,
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "users_roles",
+        joinColumns = [JoinColumn(name = "user_id", referencedColumnName = "id")],
+        inverseJoinColumns = [JoinColumn(name = "role_id", referencedColumnName = "id")]
+    )
+    open var roles: MutableSet<Role> = mutableSetOf()
 )

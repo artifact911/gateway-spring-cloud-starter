@@ -20,7 +20,7 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.postgresql:postgresql")
-    // Spring использует рефлексию Kotlin для работы с классами, и без этой зависимости возникает ошибка
+    // Spring использует рефлексию Kotlin для работы с классами, и без этой зависимости возникает ошибка UnsatisfiedDependencyException
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     testImplementation(kotlin("test"))
